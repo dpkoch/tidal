@@ -4,6 +4,16 @@ import struct
 import numpy as np
 
 
+class ParserError(Exception):
+    """Base class for parser module exceptions"""
+    pass
+
+
+class InvalidLogFile(ParserError):
+    """Indicates the log file format was not valid"""
+    pass
+
+
 class Log:
     def __init__(self, filename):
         self.filename = filename
@@ -21,7 +31,6 @@ class Log:
         self.DATA_MARKER = b'\xDB'
         self.NULL_TERMINATOR = b'\x00'
 
-        self.TIMESTAMP_SIZE = 8
         self.TIMESTAMP_DTYPE = np.dtype('u8')
 
         self.read_stream_id = lambda f: struct.unpack('I', f.read(4))[0]
@@ -61,9 +70,7 @@ class Log:
                     elif byte == self.EOF:
                         break
                     else:
-                        print("Unexpected byte value!")
-                        # TODO raise exception
-                        break
+                        raise InvalidLogFile()
 
                 except EOFError:
                     break
@@ -122,7 +129,8 @@ class Log:
 
     def read_data(self, f):
         stream_id = self.read_stream_id(f)
-        self.time_bytestream[stream_id].write(f.read(self.TIMESTAMP_SIZE))
+        self.time_bytestream[stream_id].write(
+            f.read(self.TIMESTAMP_DTYPE.itemsize))
         self.data_bytestream[stream_id].write(
             f.read(self.metadata[stream_id]['dtype'].itemsize))
 
