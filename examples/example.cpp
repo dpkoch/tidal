@@ -11,6 +11,8 @@ int main()
   auto scalar_stream = log.add_scalar_stream<int, float, double>("Scalar Stream");
   auto vector_stream = log.add_vector_stream<uint8_t, 6>("Vector Stream");
 
+  scalar_stream.set_labels("alpha", "bravo", "charlie");
+
   scalar_stream.log(4000, 4298, 8.350f, 654.23);
 
   Eigen::Matrix<uint8_t, 6, 1> vector_data = Eigen::Matrix<uint8_t, 6, 1>::LinSpaced(4, 10);

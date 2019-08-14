@@ -107,6 +107,14 @@ public:
       format_recurse<Ts...>();
     }
 
+    template <typename... Labels,
+              typename std::enable_if<sizeof...(Labels) == sizeof...(Ts), int>::type = 0>
+    void set_labels(Labels... labels)
+    {
+      logger_ << Logger::LABEL_MARKER << id_;
+      label_recurse(labels...);
+    }
+
     void log(unsigned long timestamp, Ts... data)
     {
       write_data_prefix(timestamp);
@@ -133,6 +141,18 @@ public:
 
     template <typename... Tail>
     typename std::enable_if<sizeof...(Tail) == 0>::type format_recurse() {}
+
+    template <typename... Labels>
+    void label_recurse(const std::string& first, Labels... labels)
+    {
+      label_recurse(first);
+      label_recurse(labels...);
+    }
+
+    void label_recurse(const std::string& label)
+    {
+      logger_ << label;
+    }
   };
 
   template <typename T, unsigned int elements>
@@ -231,6 +251,7 @@ public:
 private:
   static constexpr uint8_t HEADER_MARKER = 0xA5;
   static constexpr uint8_t DATA_MARKER = 0xDB;
+  static constexpr uint8_t LABEL_MARKER = 0x66;
 
   std::ofstream file_;
   unsigned int next_id_ = 0;

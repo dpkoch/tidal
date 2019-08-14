@@ -29,6 +29,7 @@ class Log:
         self.EOF = b''
         self.METADATA_MARKER = b'\xA5'
         self.DATA_MARKER = b'\xDB'
+        self.LABEL_MARKER = b'\x66'
         self.NULL_TERMINATOR = b'\x00'
 
         self.TIMESTAMP_DTYPE = np.dtype('u8')
@@ -67,6 +68,8 @@ class Log:
                         self.read_data(f)
                     elif byte == self.METADATA_MARKER:
                         self.read_metadata(f)
+                    elif byte == self.LABEL_MARKER:
+                        self.read_labels(f)
                     elif byte == self.EOF:
                         break
                     else:
@@ -94,6 +97,16 @@ class Log:
         # initialize bytestreams
         self.time_bytestream[stream_id] = io.BytesIO()
         self.data_bytestream[stream_id] = io.BytesIO()
+
+    def read_labels(self, f):
+        stream_id = self.read_stream_id(f)
+
+        labels = []
+        for _ in range(len(self.metadata[stream_id]['dtype'])):
+            labels.append(self.read_string(f))
+
+        self.metadata[stream_id]['labels'] = tuple(labels)
+        self.metadata[stream_id]['dtype'].names = self.metadata[stream_id]['labels']
 
     def read_string(self, f):
         b = io.BytesIO()
