@@ -15,6 +15,40 @@ class InvalidLogFile(ParserError):
 
 
 class Log:
+    # miscellaneous constants
+    EOF = b''
+    NULL_TERMINATOR = b'\x00'
+
+    # binary format specification
+    MARKER_METADATA = b'\xA5'
+    MARKER_LABELS = b'\x66'
+    MARKER_DATA = b'\xDB'
+
+    TIMESTAMP_DTYPE = np.dtype('uint64')
+
+    TYPE_STREAM_ID = 'I'  # uint32 (format specifier struct package)
+    TYPE_DATA_CLASS = 'B'  # uint8 (format specifier for struct package)
+    TYPE_SCALAR_TYPE = 'B'  # uint8 (format specifier for struct package)
+    TYPE_DATA_SIZE = 'I'  # uint32 (format specifier for struct package)
+
+    # data class identifiers
+    DATACLASS_SCALAR = 0
+    DATACLASS_VECTOR = 1
+    DATACLASS_MATRIX = 2
+
+    # scalar type identifiers
+    SCALAR_TYPES = {0:  'uint8',  # type id: dtype string (numpy)
+                    1:  'int8',
+                    2:  'uint16',
+                    3:  'int16',
+                    4:  'uint32',
+                    5:  'int32',
+                    6:  'uint64',
+                    7:  'int64',
+                    8:  'float32',
+                    9:  'float64',
+                    10: 'bool'}
+
     def __init__(self, filename):
         self.filename = filename
 
@@ -25,34 +59,19 @@ class Log:
         self.time_bytestream = {}  # bytestream buckets for timestamps
         self.data_bytestream = {}  # bytestream buckets for data
 
-        # binary format specification
-        self.EOF = b''
-        self.METADATA_MARKER = b'\xA5'
-        self.DATA_MARKER = b'\xDB'
-        self.LABEL_MARKER = b'\x66'
-        self.NULL_TERMINATOR = b'\x00'
+        # binary format decoders
+        self.read_stream_id = lambda f: struct.unpack(
+            self.TYPE_STREAM_ID, f.read(struct.calcsize(self.TYPE_STREAM_ID)))[0]
+        self.read_data_class = lambda f: struct.unpack(
+            self.TYPE_DATA_CLASS, f.read(struct.calcsize(self.TYPE_DATA_CLASS)))[0]
+        self.read_scalar_type = lambda f: struct.unpack(
+            self.TYPE_SCALAR_TYPE, f.read(struct.calcsize(self.TYPE_SCALAR_TYPE)))[0]
+        self.read_data_size = lambda f: struct.unpack(
+            self.TYPE_DATA_SIZE, f.read(struct.calcsize(self.TYPE_DATA_SIZE)))[0]
 
-        self.TIMESTAMP_DTYPE = np.dtype('u8')
-
-        self.read_stream_id = lambda f: struct.unpack('I', f.read(4))[0]
-        self.read_data_class = lambda f: struct.unpack('B', f.read(1))[0]
-        self.read_scalar_type = lambda f: struct.unpack('B', f.read(1))[0]
-        self.read_data_size = lambda f: struct.unpack('I', f.read(4))[0]
-
-        self.format_handler = {0: self.read_scalar_format,  # data class id: metadata handler function
-                               1: self.read_vector_format,
-                               2: self.read_matrix_format}
-        self.scalar_types = {0: 'u1',  # type id: dtype string
-                             1: 'i1',
-                             2: 'u2',
-                             3: 'i2',
-                             4: 'u4',
-                             5: 'i4',
-                             6: 'u8',
-                             7: 'i8',
-                             8: 'f4',
-                             9: 'f8',
-                             10: 'bool'}
+        self.format_handler = {self.DATACLASS_SCALAR: self.read_scalar_format,  # data class id: metadata handler function
+                               self.DATACLASS_VECTOR: self.read_vector_format,
+                               self.DATACLASS_MATRIX: self.read_matrix_format}
 
         # parse the log file on construction
         self.parse()
@@ -65,11 +84,11 @@ class Log:
             while True:
                 try:
                     byte = f.read(1)
-                    if byte == self.DATA_MARKER:
+                    if byte == self.MARKER_DATA:
                         self.read_data(f)
-                    elif byte == self.METADATA_MARKER:
+                    elif byte == self.MARKER_METADATA:
                         self.read_metadata(f)
-                    elif byte == self.LABEL_MARKER:
+                    elif byte == self.MARKER_LABELS:
                         self.read_labels(f)
                     elif byte == self.EOF:
                         break
@@ -102,9 +121,8 @@ class Log:
     def read_labels(self, f):
         stream_id = self.read_stream_id(f)
 
-        labels = []
-        for _ in range(len(self.metadata[stream_id]['dtype'])):
-            labels.append(self.read_string(f))
+        labels = [self.read_string(f)
+                  for _ in range(len(self.metadata[stream_id]['dtype']))]
 
         self.metadata[stream_id]['labels'] = tuple(labels)
         self.metadata[stream_id]['dtype'].names = self.metadata[stream_id]['labels']
@@ -121,7 +139,7 @@ class Log:
 
     def read_scalar_format(self, f):
         num_scalars = self.read_data_size(f)
-        dtypes = [self.scalar_types[self.read_scalar_type(f)]
+        dtypes = [self.SCALAR_TYPES[self.read_scalar_type(f)]
                   for _ in range(num_scalars)]
 
         return np.dtype(','.join(dtypes))
@@ -131,7 +149,7 @@ class Log:
         elements = self.read_data_size(f)
 
         return np.dtype('({},){}'.format(
-            elements, self.scalar_types[scalar_type]))
+            elements, self.SCALAR_TYPES[scalar_type]))
 
     def read_matrix_format(self, f):
         scalar_type = self.read_scalar_type(f)
@@ -139,7 +157,7 @@ class Log:
         cols = self.read_data_size(f)
 
         return np.dtype('({},{}){}'.format(
-            rows, cols, self.scalar_types[scalar_type]))
+            rows, cols, self.SCALAR_TYPES[scalar_type]))
 
     def read_data(self, f):
         stream_id = self.read_stream_id(f)
