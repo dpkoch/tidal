@@ -11,3 +11,4 @@ include_directories(
 )
 
 add_executable(example examples/example.cpp)
+add_executable(stresstest examples/stresstest.cpp)
