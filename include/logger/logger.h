@@ -207,6 +207,17 @@ public:
     return stream_object;
   }
 
+  template <typename DerivedStream, typename... Args>
+  DerivedStream add_custom_stream(const std::string& name, Args&&... args)
+  {
+    static_assert(std::is_base_of<Stream, DerivedStream>::value,
+      "Type parameter DerivedStream must inherit from Stream");
+
+    DerivedStream stream_object(*this, name, std::forward<Args>(args)...);
+    stream_object.write_header(name);
+    return stream_object;
+  }
+
 private:
   enum class DataClass : uint8_t
   {
