@@ -6,9 +6,6 @@
 #include <string>
 #include <type_traits>
 
-// #include <utility>
-#include <iostream>
-
 #include <eigen3/Eigen/Core>
 
 namespace logger
@@ -69,25 +66,14 @@ public:
 
   class Stream
   {
-  public:
+  protected:
+    friend class Logger;
+
     Stream(Logger &logger, unsigned int id) :
       logger_(logger),
       id_(id)
     {}
     virtual ~Stream() {}
-
-    void write_header(const std::string& name)
-    {
-      // write header
-      logger_ << Logger::HEADER_MARKER << id_ << name;
-      write_format();
-    }
-
-    unsigned int id() const { return id_; }
-
-  protected:
-    Logger &logger_;
-    unsigned int id_;
 
     virtual void write_format() = 0;
 
@@ -95,19 +81,26 @@ public:
     {
       logger_ << Logger::DATA_MARKER << id_ << timestamp;
     }
+
+    unsigned int id() const { return id_; }
+
+    Logger &logger_;
+
+  private:
+    void write_header(const std::string& name)
+    {
+      logger_ << Logger::HEADER_MARKER << id_ << name;
+      write_format();
+    }
+
+    unsigned int id_;
   };
 
   template <typename... Ts>
   class ScalarStream : public Stream
   {
   public:
-    ScalarStream(Logger &logger, unsigned int id) : Stream(logger, id) {}
-
-    void write_format() override
-    {
-      logger_ << DataClass::SCALAR << static_cast<uint32_t>(sizeof...(Ts));
-      format_recurse<Ts...>();
-    }
+    friend class Logger;
 
     template <typename... Labels,
               typename std::enable_if<sizeof...(Labels) == sizeof...(Ts), int>::type = 0>
@@ -121,6 +114,15 @@ public:
     {
       write_data_prefix(timestamp);
       log_recurse(data...);
+    }
+
+  protected:
+    ScalarStream(Logger &logger, unsigned int id) : Stream(logger, id) {}
+
+    void write_format() override
+    {
+      logger_ << DataClass::SCALAR << static_cast<uint32_t>(sizeof...(Ts));
+      format_recurse<Ts...>();
     }
 
   private:
@@ -161,17 +163,20 @@ public:
   class VectorStream : public Stream
   {
   public:
-    VectorStream(Logger &logger, unsigned int id) : Stream(logger, id) {}
-
-    void write_format() override
-    {
-      logger_ << DataClass::VECTOR << resolve_scalar_type<T>() << elements;
-    }
+    friend class Logger;
 
     void log(unsigned long timestamp, const Eigen::Matrix<T, elements, 1> &data)
     {
       write_data_prefix(timestamp);
       logger_ << data;
+    }
+
+  protected:
+    VectorStream(Logger &logger, unsigned int id) : Stream(logger, id) {}
+
+    void write_format() override
+    {
+      logger_ << DataClass::VECTOR << resolve_scalar_type<T>() << elements;
     }
   };
 
@@ -179,17 +184,20 @@ public:
   class MatrixStream : public Stream
   {
   public:
-    MatrixStream(Logger &logger, unsigned int id) : Stream(logger, id) {}
-
-    void write_format() override
-    {
-      logger_ << DataClass::MATRIX << resolve_scalar_type<T>() << rows << cols;
-    }
+    friend class Logger;
 
     void log(unsigned long timestamp, const Eigen::Matrix<T, rows, cols> &data)
     {
       write_data_prefix(timestamp);
       logger_ << data;
+    }
+
+  protected:
+    MatrixStream(Logger &logger, unsigned int id) : Stream(logger, id) {}
+
+    void write_format() override
+    {
+      logger_ << DataClass::MATRIX << resolve_scalar_type<T>() << rows << cols;
     }
   };
 
@@ -209,14 +217,11 @@ public:
   //
   //     stream1.log(t, 6, 23.4, 34.12);
 
-  // TODO add check that the stream has actually been added via one of these functions (not just created on its own)
-
   template <typename... Ts>
   ScalarStream<Ts...> add_scalar_stream(const std::string& name)
   {
     ScalarStream<Ts...> stream_object(*this, next_id_++);
     stream_object.write_header(name);
-    // TODO add to list of approved streams?
     return stream_object;
   }
 
@@ -225,7 +230,6 @@ public:
   {
     VectorStream<T, elements> stream_object(*this, next_id_++);
     stream_object.write_header(name);
-    // TODO add to list of approved streams?
     return stream_object;
   }
 
@@ -234,7 +238,6 @@ public:
   {
     MatrixStream<T, rows, cols> stream_object(*this, next_id_++);
     stream_object.write_header(name);
-    // TODO add to list of approved streams?
     return stream_object;
   }
 
@@ -246,7 +249,6 @@ public:
 
   //   DerivedStream stream_object(*this, stream, std::forward<Args>(args)...);
   //   stream_object.write_header(name);
-  //   // TODO add to list of approved streams?
   //   return stream_object;
   // }
 
