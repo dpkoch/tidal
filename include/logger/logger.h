@@ -11,20 +11,6 @@
 namespace logger
 {
 
-
-// The log file will have a header that looks like the following:
-//   logger version?
-//   timestamp?
-//   number of streams
-//   List of streams:
-//     ID (u8) | Name (null-terminated string) | type specifier (see below)
-
-// allow for the following types specifiers:
-//  * data type | specifier (type)
-//  * scalar | scalar (u8) number (u32) [type (u8) ...]
-//  * vector | vector (u8) type (u8) elements (u32)
-//  * matrix (row-major?) | matrix (u8) type (u8) rows (u32) cols (u32)
-
 enum class ScalarType : uint8_t
 {
   u8,
@@ -197,19 +183,6 @@ public:
   Logger(const std::string& filename) : file_(filename, std::ios_base::out | std::ios_base::binary) {}
   ~Logger() { file_.close(); }
 
-  // setup up the log file
-  // have the following 3 functions either do nothing or throw an exception if called after any of the log_* functions?
-  // also need to check for duplicate string names
-  //
-  // maybe these guys could return some object that you use to log, which could enforce that subsequent calls are of the right type?
-  // So the use case would look something like
-  //     Logger logger(file);
-  //     auto stream1 = logger.add_scalar_stream<int, double, double>("stream1");
-  //     auto stream2 = logger.add_vector_stream<double, 6>("stream2");
-  //     auto stream3 = logger.add_matrix_stream<double, 3, 3>("stream3");
-  //
-  //     stream1.log(t, 6, 23.4, 34.12);
-
   template <typename... Ts>
   ScalarStream<Ts...> add_scalar_stream(const std::string& name)
   {
@@ -233,17 +206,6 @@ public:
     stream_object.write_header(name);
     return stream_object;
   }
-
-  // template <typename DerivedStream, typename... Args>
-  // DerivedStream add_custom_stream(const std::string& stream, Args&&... args)
-  // {
-  //   static_assert(std::is_base_of<Stream, DerivedStream>::value,
-  //     "Type parameter DerivedStream must inherit from Stream");
-
-  //   DerivedStream stream_object(*this, stream, std::forward<Args>(args)...);
-  //   stream_object.write_header(name);
-  //   return stream_object;
-  // }
 
 private:
   enum class DataClass : uint8_t
