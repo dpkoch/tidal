@@ -25,13 +25,6 @@ namespace logger
 //  * vector | vector (u8) type (u8) elements (u32)
 //  * matrix (row-major?) | matrix (u8) type (u8) rows (u32) cols (u32)
 
-enum class DataClass : uint8_t
-{
-  SCALAR,
-  VECTOR,
-  MATRIX
-};
-
 enum class ScalarType : uint8_t
 {
   u8,
@@ -79,7 +72,7 @@ public:
 
     inline void write_data_prefix(unsigned long timestamp)
     {
-      logger_ << Logger::DATA_MARKER << id_ << timestamp;
+      logger_ << Marker::DATA << id_ << timestamp;
     }
 
     unsigned int id() const { return id_; }
@@ -89,7 +82,7 @@ public:
   private:
     void write_header(const std::string& name)
     {
-      logger_ << Logger::HEADER_MARKER << id_ << name;
+      logger_ << Marker::METADATA << id_ << name;
       write_format();
     }
 
@@ -106,7 +99,7 @@ public:
               typename std::enable_if<sizeof...(Labels) == sizeof...(Ts), int>::type = 0>
     void set_labels(Labels... labels)
     {
-      logger_ << Logger::LABEL_MARKER << id_;
+      logger_ << Marker::LABELS << id_;
       label_recurse(labels...);
     }
 
@@ -253,12 +246,19 @@ public:
   // }
 
 private:
-  static constexpr uint8_t HEADER_MARKER = 0xA5;
-  static constexpr uint8_t DATA_MARKER = 0xDB;
-  static constexpr uint8_t LABEL_MARKER = 0x66;
+  enum class DataClass : uint8_t
+  {
+    SCALAR,
+    VECTOR,
+    MATRIX
+  };
 
-  std::ofstream file_;
-  unsigned int next_id_ = 0;
+  enum class Marker : uint8_t
+  {
+    METADATA = 0xA5,
+    LABELS = 0x66,
+    DATA = 0xDB
+  };
 
   Logger& operator<<(const std::string& data)
   {
@@ -281,7 +281,8 @@ private:
     return *this;
   }
 
-  friend class Stream;
+  std::ofstream file_;
+  unsigned int next_id_ = 0;
 };
 
 } // namespace logger
