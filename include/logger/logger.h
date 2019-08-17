@@ -46,7 +46,8 @@ enum class ScalarType : uint8_t
   u64,
   i64,
   f32,
-  f64
+  f64,
+  boolean
 };
 
 template <typename T> ScalarType resolve_scalar_type() = delete;
@@ -60,6 +61,7 @@ template <> ScalarType resolve_scalar_type<uint64_t>() { return ScalarType::u64;
 template <> ScalarType resolve_scalar_type<int64_t>()  { return ScalarType::i64; }
 template <> ScalarType resolve_scalar_type<float>()    { return ScalarType::f32; }
 template <> ScalarType resolve_scalar_type<double>()   { return ScalarType::f64; }
+template <> ScalarType resolve_scalar_type<bool>()     { return ScalarType::boolean; }
 
 class Logger
 {

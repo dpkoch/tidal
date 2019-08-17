@@ -51,7 +51,8 @@ class Log:
                              6: 'u8',
                              7: 'i8',
                              8: 'f4',
-                             9: 'f8'}
+                             9: 'f8',
+                             10: 'bool'}
 
         # parse the log file on construction
         self.parse()
