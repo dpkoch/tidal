@@ -81,9 +81,8 @@ public:
   public:
     friend class Logger;
 
-    template <typename... Labels,
-              typename std::enable_if<sizeof...(Labels) == sizeof...(Ts), int>::type = 0>
-    void set_labels(Labels... labels)
+    template <typename... Labels>
+    typename std::enable_if<sizeof...(Labels) == sizeof...(Ts)>::type set_labels(Labels... labels)
     {
       logger_ << Marker::LABELS << id_;
       label_recurse(labels...);
