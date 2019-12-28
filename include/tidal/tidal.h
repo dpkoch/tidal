@@ -39,17 +39,17 @@ template <> ScalarType resolve_scalar_type<float>()    { return ScalarType::f32;
 template <> ScalarType resolve_scalar_type<double>()   { return ScalarType::f64; }
 template <> ScalarType resolve_scalar_type<bool>()     { return ScalarType::boolean; }
 
-class Logger
+class Log
 {
 public:
 
   class Stream
   {
   protected:
-    friend class Logger;
+    friend class Log;
 
-    Stream(Logger &logger, unsigned int id) :
-      logger_(logger),
+    Stream(Log &log, unsigned int id) :
+      log_(log),
       id_(id)
     {}
     virtual ~Stream() {}
@@ -58,17 +58,17 @@ public:
 
     inline void write_data_prefix(unsigned long timestamp)
     {
-      logger_ << Marker::DATA << id_ << timestamp;
+      log_ << Marker::DATA << id_ << timestamp;
     }
 
     unsigned int id() const { return id_; }
 
-    Logger &logger_;
+    Log &log_;
 
   private:
     void write_header(const std::string& name)
     {
-      logger_ << Marker::METADATA << id_ << name;
+      log_ << Marker::METADATA << id_ << name;
       write_format();
     }
 
@@ -79,12 +79,12 @@ public:
   class ScalarStream : public Stream
   {
   public:
-    friend class Logger;
+    friend class Log;
 
     template <typename... Labels>
     typename std::enable_if<sizeof...(Labels) == sizeof...(Ts)>::type set_labels(Labels... labels)
     {
-      logger_ << Marker::LABELS << id_;
+      log_ << Marker::LABELS << id_;
       label_recurse(labels...);
     }
 
@@ -95,11 +95,11 @@ public:
     }
 
   protected:
-    ScalarStream(Logger &logger, unsigned int id) : Stream(logger, id) {}
+    ScalarStream(Log &log, unsigned int id) : Stream(log, id) {}
 
     void write_format() override
     {
-      logger_ << DataClass::SCALAR << static_cast<uint32_t>(sizeof...(Ts));
+      log_ << DataClass::SCALAR << static_cast<uint32_t>(sizeof...(Ts));
       format_recurse<Ts...>();
     }
 
@@ -107,7 +107,7 @@ public:
     template <typename First, typename... Tail>
     void log_recurse(First value, Tail... tail)
     {
-      logger_ << value;
+      log_ << value;
       log_recurse(tail...);
     }
 
@@ -117,7 +117,7 @@ public:
     template <typename First, typename... Tail>
     void format_recurse()
     {
-      logger_ << resolve_scalar_type<First>();
+      log_ << resolve_scalar_type<First>();
       format_recurse<Tail...>();
     }
 
@@ -133,7 +133,7 @@ public:
 
     void label_recurse(const std::string& label)
     {
-      logger_ << label;
+      log_ << label;
     }
   };
 
@@ -141,20 +141,20 @@ public:
   class VectorStream : public Stream
   {
   public:
-    friend class Logger;
+    friend class Log;
 
     void log(unsigned long timestamp, const Eigen::Matrix<T, elements, 1> &data)
     {
       write_data_prefix(timestamp);
-      logger_ << data;
+      log_ << data;
     }
 
   protected:
-    VectorStream(Logger &logger, unsigned int id) : Stream(logger, id) {}
+    VectorStream(Log &log, unsigned int id) : Stream(log, id) {}
 
     void write_format() override
     {
-      logger_ << DataClass::VECTOR << resolve_scalar_type<T>() << elements;
+      log_ << DataClass::VECTOR << resolve_scalar_type<T>() << elements;
     }
   };
 
@@ -162,25 +162,25 @@ public:
   class MatrixStream : public Stream
   {
   public:
-    friend class Logger;
+    friend class Log;
 
     void log(unsigned long timestamp, const Eigen::Matrix<T, rows, cols> &data)
     {
       write_data_prefix(timestamp);
-      logger_ << data;
+      log_ << data;
     }
 
   protected:
-    MatrixStream(Logger &logger, unsigned int id) : Stream(logger, id) {}
+    MatrixStream(Log &log, unsigned int id) : Stream(log, id) {}
 
     void write_format() override
     {
-      logger_ << DataClass::MATRIX << resolve_scalar_type<T>() << rows << cols;
+      log_ << DataClass::MATRIX << resolve_scalar_type<T>() << rows << cols;
     }
   };
 
-  Logger(const std::string& filename) : file_(filename, std::ios_base::out | std::ios_base::binary) {}
-  ~Logger() { file_.close(); }
+  Log(const std::string& filename) : file_(filename, std::ios_base::out | std::ios_base::binary) {}
+  ~Log() { file_.close(); }
 
   template <typename... Ts>
   ScalarStream<Ts...> add_scalar_stream(const std::string& name)
@@ -221,7 +221,7 @@ private:
     DATA = 0xDB
   };
 
-  Logger& operator<<(const std::string& data)
+  Log& operator<<(const std::string& data)
   {
     file_.write(data.c_str(), sizeof(char) * data.size());
     file_ << '\0'; // null terminate strings
@@ -229,14 +229,14 @@ private:
   }
 
   template<typename T, unsigned int rows, unsigned int cols>
-  Logger& operator<<(const Eigen::Matrix<T, rows, cols>& data)
+  Log& operator<<(const Eigen::Matrix<T, rows, cols>& data)
   {
     file_.write(data.data(), data.size());
     return *this;
   }
 
   template <typename T>
-  Logger& operator<<(const T& data)
+  Log& operator<<(const T& data)
   {
     file_.write(reinterpret_cast<const char*>(&data), sizeof(T));
     return *this;

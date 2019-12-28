@@ -4,7 +4,7 @@
 
 int main()
 {
-  tidal::Logger log("meh.bin");
+  tidal::Log log("meh.bin");
 
   auto scalar_stream = log.add_scalar_stream<int, float, double, bool>("Scalar Stream");
   auto vector_stream = log.add_vector_stream<uint8_t, 6>("Vector Stream");
