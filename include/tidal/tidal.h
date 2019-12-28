@@ -1,5 +1,5 @@
-#ifndef LOGGER_LOGGER_H
-#define LOGGER_LOGGER_H
+#ifndef TIDAL_TIDAL_H
+#define TIDAL_TIDAL_H
 
 #include <cstdint>
 #include <fstream>
@@ -8,7 +8,7 @@
 
 #include <eigen3/Eigen/Core>
 
-namespace logger
+namespace tidal
 {
 
 enum class ScalarType : uint8_t
@@ -246,6 +246,6 @@ private:
   unsigned int next_id_ = 0;
 };
 
-} // namespace logger
+} // namespace tidal
 
-#endif // LOGGER_LOGGER_H
+#endif // TIDAL_TIDAL_H
