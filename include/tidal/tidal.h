@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <type_traits>
 
@@ -183,27 +184,27 @@ public:
   ~Log() { file_.close(); }
 
   template <typename... Ts>
-  ScalarStream<Ts...> add_scalar_stream(const std::string& name)
+  std::shared_ptr<ScalarStream<Ts...>> add_scalar_stream(const std::string& name)
   {
-    ScalarStream<Ts...> stream_object(*this, next_id_++);
-    stream_object.write_header(name);
-    return stream_object;
+    std::shared_ptr<ScalarStream<Ts...>> ptr(new ScalarStream<Ts...>(*this, next_id_++));
+    ptr->write_header(name);
+    return ptr;
   }
 
   template <typename T, unsigned int elements>
-  VectorStream<T, elements> add_vector_stream(const std::string& name)
+  std::shared_ptr<VectorStream<T, elements>> add_vector_stream(const std::string& name)
   {
-    VectorStream<T, elements> stream_object(*this, next_id_++);
-    stream_object.write_header(name);
-    return stream_object;
+    std::shared_ptr<VectorStream<T, elements>> ptr(new VectorStream<T, elements>(*this, next_id_++));
+    ptr->write_header(name);
+    return ptr;
   }
 
   template <typename T, unsigned int rows, unsigned int cols>
-  MatrixStream<T, rows, cols> add_matrix_stream(const std::string& name)
+  std::shared_ptr<MatrixStream<T, rows, cols>> add_matrix_stream(const std::string& name)
   {
-    MatrixStream<T, rows, cols> stream_object(*this, next_id_++);
-    stream_object.write_header(name);
-    return stream_object;
+    std::shared_ptr<MatrixStream<T, rows, cols>> ptr(new MatrixStream<T, rows, cols>(*this, next_id_++));
+    ptr->write_header(name);
+    return ptr;
   }
 
 private:
