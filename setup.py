@@ -6,10 +6,12 @@ setuptools.setup(
     author="Daniel Koch",
     author_email="daniel.p.koch@gmail.com",
     description="Python parser for binary log files written with the TiDaL C++ logging library",
+    license="MIT",
     url="https://github.com/dpkoch/tidal",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
