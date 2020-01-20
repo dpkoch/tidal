@@ -36,7 +36,7 @@ class InvalidLogFile(ParserError):
     pass
 
 
-class Log:
+class Parser:
     # miscellaneous constants
     EOF = b''
     NULL_TERMINATOR = b'\x00'
@@ -200,7 +200,3 @@ class Log:
             else:
                 self.data[self.metadata[stream_id]['name']] = np.frombuffer(
                     self.data_bytestream[stream_id].getvalue(), dtype)
-
-
-if __name__ == '__main__':
-    meh = Log('build/meh.bin')
