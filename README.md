@@ -1,7 +1,7 @@
 # TiDaL
 
 [![License](https://img.shields.io/github/license/dpkoch/tidal)](https://github.com/dpkoch/tidal/blob/master/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/tidal-parser)](https://pypi.org/project/:tidal-parser/)
+[![PyPI](https://img.shields.io/pypi/v/tidal-parser)](https://pypi.org/project/tidal-parser/)
 
 TiDaL is a **ti**me-series **da**ta **l**ogging utility for C++ applications. It consists of two parts:
 
