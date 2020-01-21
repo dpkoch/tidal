@@ -1,5 +1,8 @@
 # TiDaL
 
+[![License](https://img.shields.io/github/license/dpkoch/tidal)](https://github.com/dpkoch/tidal/blob/master/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/tidal-parser)](https://pypi.org/project/:tidal-parser/)
+
 TiDaL is a **ti**me-series **da**ta **l**ogging utility for C++ applications. It consists of two parts:
 
   - A header-only C++ library for logging numerical data (scalars or [Eigen](http://eigen.tuxfamily.org/) vectors/matrices), with an associated timestamp, to a file
