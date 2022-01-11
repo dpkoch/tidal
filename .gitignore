@@ -3,6 +3,7 @@
 *.user
 .vscode/
 
+bazel-*
 build/
 dist/
 *.egg-info/
