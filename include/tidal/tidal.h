@@ -31,7 +31,7 @@
 #include <string>
 #include <type_traits>
 
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 
 namespace tidal
 {

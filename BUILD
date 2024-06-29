@@ -5,5 +5,5 @@ cc_library(
     hdrs = ["include/tidal/tidal.h"],
     strip_include_prefix = "include",
     visibility = ["//visibility:public"],
-    deps = ["@eigen3"],
+    deps = ["@eigen"],
 )

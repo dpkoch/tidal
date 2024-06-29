@@ -1,0 +1,5 @@
+"""TiDaL is a time-series data logging utility for C++ applications"""
+
+module(name = "tidal")
+
+bazel_dep(name = "eigen", version = "3.4.0")

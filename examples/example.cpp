@@ -1,6 +1,6 @@
 #include <tidal/tidal.h>
 
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 
 int main()
 {
