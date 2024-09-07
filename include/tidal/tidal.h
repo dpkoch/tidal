@@ -51,18 +51,18 @@ enum class ScalarType : uint8_t
   boolean
 };
 
-template <typename T> ScalarType resolve_scalar_type() = delete;
-template <> ScalarType resolve_scalar_type<uint8_t>()  { return ScalarType::u8; }
-template <> ScalarType resolve_scalar_type<int8_t>()   { return ScalarType::i8; }
-template <> ScalarType resolve_scalar_type<uint16_t>() { return ScalarType::u16; }
-template <> ScalarType resolve_scalar_type<int16_t>()  { return ScalarType::i16; }
-template <> ScalarType resolve_scalar_type<uint32_t>() { return ScalarType::u32; }
-template <> ScalarType resolve_scalar_type<int32_t>()  { return ScalarType::i32; }
-template <> ScalarType resolve_scalar_type<uint64_t>() { return ScalarType::u64; }
-template <> ScalarType resolve_scalar_type<int64_t>()  { return ScalarType::i64; }
-template <> ScalarType resolve_scalar_type<float>()    { return ScalarType::f32; }
-template <> ScalarType resolve_scalar_type<double>()   { return ScalarType::f64; }
-template <> ScalarType resolve_scalar_type<bool>()     { return ScalarType::boolean; }
+template <typename T> constexpr ScalarType resolve_scalar_type() = delete;
+template <> constexpr ScalarType resolve_scalar_type<uint8_t>()  { return ScalarType::u8; }
+template <> constexpr ScalarType resolve_scalar_type<int8_t>()   { return ScalarType::i8; }
+template <> constexpr ScalarType resolve_scalar_type<uint16_t>() { return ScalarType::u16; }
+template <> constexpr ScalarType resolve_scalar_type<int16_t>()  { return ScalarType::i16; }
+template <> constexpr ScalarType resolve_scalar_type<uint32_t>() { return ScalarType::u32; }
+template <> constexpr ScalarType resolve_scalar_type<int32_t>()  { return ScalarType::i32; }
+template <> constexpr ScalarType resolve_scalar_type<uint64_t>() { return ScalarType::u64; }
+template <> constexpr ScalarType resolve_scalar_type<int64_t>()  { return ScalarType::i64; }
+template <> constexpr ScalarType resolve_scalar_type<float>()    { return ScalarType::f32; }
+template <> constexpr ScalarType resolve_scalar_type<double>()   { return ScalarType::f64; }
+template <> constexpr ScalarType resolve_scalar_type<bool>()     { return ScalarType::boolean; }
 
 class Log
 {
